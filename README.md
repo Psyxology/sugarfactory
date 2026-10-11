@@ -9,6 +9,7 @@ A small website where you can play short sessions of classic 2000s-era PC games 
 | `diablo/` | Diablo | Runs the free shareware demo (`spawn.mpq`). Engine: [diablo_web](https://github.com/JohnImril/diablo_web), built for this site. |
 | `tower-defense/` | Kingdom's Last Stand | An original tower defense game made for this arcade. Plain HTML and JavaScript, no build step. |
 | `quake3/` | Quake III Arena | The free 1999 demo, played against bots. Engine: [ioquake3](https://github.com/ioquake/ioq3) built for the browser. See `quake3/SOURCE.txt`. |
+| `army-rush/` | Army Rush | An original "army runner" like the mobile ads: steer your crowd through math gates, then storm the boss. Made for phones. No build step. |
 | `arena-royale/` | Arena Royale | An original bots-only battle royale on the free OpenArena game (GPL), with its own engine build. Desktop only. Licenses and source patches are in `arena-royale/README.md` and `arena-royale/source/`. |
 | (landing page) | Diablo II | Shown as "coming soon". |
 

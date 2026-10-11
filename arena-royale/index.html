@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arena Royale · Retro Quest Arcade</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Ccircle cx=%228%22 cy=%228%22 r=%226%22 fill=%22none%22 stroke=%22%234aa3ff%22 stroke-width=%222%22/%3E%3Ccircle cx=%228%22 cy=%228%22 r=%222%22 fill=%22%23ffd84a%22/%3E%3C/svg%3E">
+<style>
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #05070c; color: #e8ecf4;
+    font-family: "Trebuchet MS", Verdana, sans-serif; }
+  canvas#canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
+  #start { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10;
+    background: radial-gradient(ellipse at 50% 30%, #1b2a4a 0%, #070a12 70%); }
+  .card { max-width: 560px; width: calc(100% - 32px); text-align: center; }
+  h1 { font-size: 46px; margin: 0 0 4px; letter-spacing: 3px; color: #ffd84a; text-shadow: 0 3px 0 #7a4b00, 0 0 24px rgba(255,180,40,.35); }
+  .tag { margin: 0 0 22px; color: #9fb3d9; font-size: 15px; }
+  .rules { text-align: left; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); border-radius: 10px;
+    padding: 14px 18px; font-size: 14px; line-height: 1.55; margin-bottom: 18px; }
+  .rules b { color: #ffd84a; }
+  .keys { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin-top: 8px; color: #c6d2ea; }
+  .keys span:nth-child(odd) { color: #fff; font-weight: bold; }
+  button { font: inherit; font-size: 20px; font-weight: bold; padding: 12px 34px; border-radius: 10px; border: 0; cursor: pointer;
+    background: #ffd84a; color: #241800; box-shadow: 0 4px 0 #a77d00; }
+  button:disabled { opacity: .55; cursor: default; }
+  .row { display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; margin-bottom: 16px; font-size: 14px; color: #c6d2ea; }
+  select { font: inherit; padding: 4px 8px; border-radius: 6px; background: #121a2c; color: #fff; border: 1px solid #33456e; }
+  #bar { height: 8px; background: rgba(255,255,255,.1); border-radius: 4px; overflow: hidden; margin: 14px 0 6px; }
+  #fill { height: 100%; width: 0; background: #4aa3ff; transition: width .2s; }
+  #status { font-size: 13px; color: #9fb3d9; min-height: 18px; }
+  .credit { margin-top: 16px; font-size: 11px; color: #6c7da3; }
+  .credit a { color: #8ea6d6; }
+  #hint { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 5; font-size: 12px; color: rgba(255,255,255,.6);
+    background: rgba(0,0,0,.4); padding: 4px 10px; border-radius: 6px; pointer-events: none; display: none; }
+  #back { position:fixed; top:10px; left:12px; z-index:2147483647; font-size:.85rem; text-decoration:none; color:#e8ecf4; background:rgba(0,0,0,.6); padding:5px 10px; border-radius:16px; }
+  #back:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+<a id="back" href="../">← Arcade</a>
+<canvas id="canvas" tabindex="0"></canvas>
+<div id="hint">Click the game to aim with the mouse. Press Esc to free the mouse or open the menu.</div>
+<div id="start">
+  <div class="card">
+    <h1>ARENA ROYALE</h1>
+    <p class="tag">A quick battle royale in a classic arena shooter</p>
+    <div class="rules">
+      You drop in with a gauntlet and a machinegun against a pack of bots. <b>Grab better weapons</b> lying around the map.
+      A <b>blue wall</b> closes in on a random spot, and standing outside it hurts. <b>Nobody respawns.</b> Be the last one standing.
+      <div class="keys">
+        <span>W A S D</span><span>move</span>
+        <span>Mouse</span><span>aim, left click to shoot</span>
+        <span>Space</span><span>jump</span>
+        <span>1 to 9 / wheel</span><span>switch weapon</span>
+        <span>Tab</span><span>scoreboard</span>
+      </div>
+    </div>
+    <div class="row">
+      <label>Bots <select id="bots"><option>5</option><option>7</option><option selected>9</option><option>11</option></select></label>
+      <label>Bot skill <select id="skill"><option value="1">Easy</option><option value="2" selected>Normal</option><option value="3">Hard</option><option value="4">Brutal</option></select></label>
+    </div>
+    <button id="play" disabled>Loading…</button>
+    <p id="touch" style="display:none;color:#ffb36b;font-size:13px">This game needs a keyboard and mouse, so it won't play on a phone or tablet.</p>
+    <div id="bar"><div id="fill"></div></div>
+    <div id="status">Downloading game files…</div>
+    <p class="credit">Runs on <a href="https://ioquake3.org" target="_blank" rel="noopener">ioquake3</a> with free
+      <a href="https://openarena.ws" target="_blank" rel="noopener">OpenArena</a> content (GPL). Battle royale rules added for this arcade.</p>
+  </div>
+</div>
+
+<script type="module">
+const MAP = 'islanddm';
+const params = new URLSearchParams(location.search);
+const map = params.get('map') || MAP;
+const files = await fetch('./ioquake3-config.json').then(r => r.json()).then(c => c.baseoa.files);
+
+const statusEl = document.getElementById('status');
+const fill = document.getElementById('fill');
+const play = document.getElementById('play');
+
+// Download every game file up front, with one progress bar.
+async function download() {
+  const sizes = await Promise.all(files.map(f => fetch(f.src, { method: 'HEAD' })
+    .then(r => +r.headers.get('content-length') || 0).catch(() => 0)));
+  const total = sizes.reduce((a, b) => a + b, 0) || 1;
+  let done = 0;
+  const out = [];
+  for (const f of files) {
+    const res = await fetch(f.src);
+    if (!res.ok) throw new Error(`Could not download ${f.src}`);
+    const reader = res.body.getReader();
+    const chunks = [];
+    for (;;) {
+      const { done: end, value } = await reader.read();
+      if (end) break;
+      chunks.push(value);
+      done += value.length;
+      fill.style.width = Math.min(100, done / total * 100).toFixed(1) + '%';
+      statusEl.textContent = `Downloading game files… ${(done / 1048576).toFixed(0)} of ${(total / 1048576).toFixed(0)} MB`;
+    }
+    const buf = new Uint8Array(chunks.reduce((a, c) => a + c.length, 0));
+    let o = 0; for (const c of chunks) { buf.set(c, o); o += c.length; }
+    out.push({ name: f.src.match(/[^/]+$/)[0], dir: f.dst, data: buf });
+  }
+  return out;
+}
+
+let gameData;
+try {
+  gameData = await download();
+  statusEl.textContent = 'Ready.';
+  play.disabled = false;
+  play.textContent = 'Play';
+} catch (e) {
+  statusEl.textContent = 'Download failed: ' + e.message + '. Try reloading the page.';
+}
+
+play.addEventListener('click', async () => {
+  play.disabled = true;
+  play.textContent = 'Starting…';
+  const bots = document.getElementById('bots').value;
+  const skill = document.getElementById('skill').value;
+  const args = [
+    '+set', 'sv_pure', '0', '+set', 'net_enabled', '0', '+set', 'r_mode', '-2', '+set', 'r_fullscreen', '0',
+    '+set', 'com_basegame', 'baseoa', '+set', 'fs_game', '',
+    '+set', 'com_introplayed', '1', '+set', 'cl_motd', '0',
+    '+set', 'name', 'You', '+set', 'model', 'sarge',
+    '+set', 'g_gametype', '0', '+set', 'g_br', '1', '+set', 'fraglimit', '0', '+set', 'timelimit', '0',
+    '+set', 'sv_maxclients', '16', '+set', 'bot_minplayers', '0', '+set', 'g_doWarmup', '0',
+    '+set', 'g_brBots', bots, '+set', 'g_brBotSkill', skill,
+    '+set', 'g_brBotNames', 'Sarge Grism Andriy Tony Penguin Liz Assassin Ghost Major Beret Skelebot Metalbot',
+    '+set', 'cg_drawAttacker', '0', '+set', 'cg_drawRewards', '1', '+set', 'com_maxfps', '0', '+set', 'com_hunkMegs', '192', ...(params.get('fsdebug') ? ['+set', 'fs_debug', '1'] : []),
+    params.get('devmap') ? '+devmap' : '+map', map,
+  ];
+  const ioquake3 = (await import('./ioquake3.js')).default;
+  const canvas = document.getElementById('canvas');
+  const module = await ioquake3({
+    canvas,
+    arguments: args,
+    locateFile: f => './' + f,
+    preRun: [m => {
+      for (const f of gameData) {
+        m.FS.mkdirTree(f.dir);
+        m.FS.writeFile(`${f.dir}/${f.name}`, f.data);
+      }
+      gameData = null;
+    }],
+  });
+  window.q3cmd = cmd => module.ccall('Sys_WebCommand', null, ['string'], [cmd]);
+  document.getElementById('start').style.display = 'none';
+  const hint = document.getElementById('hint');
+  hint.style.display = 'block';
+  setTimeout(() => hint.style.display = 'none', 12000);
+  canvas.focus();
+});
+if (matchMedia('(pointer: coarse)').matches && !matchMedia('(pointer: fine)').matches) document.getElementById('touch').style.display = 'block';
+// Allow test drivers to start without clicking.
+window.startGame = () => play.click();
+</script>
+</body>
+</html>

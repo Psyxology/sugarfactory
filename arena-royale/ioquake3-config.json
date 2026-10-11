@@ -1,0 +1,8 @@
+{
+ "baseoa": {
+  "files": [
+   {"src": "baseoa/pak0-royale.pk3", "dst": "/baseoa"},
+   {"src": "baseoa/zz-royale.pk3", "dst": "/baseoa"}
+  ]
+ }
+}

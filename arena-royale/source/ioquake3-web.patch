@@ -1,0 +1,35 @@
+diff --git a/cmake/platforms/emscripten.cmake b/cmake/platforms/emscripten.cmake
+index 6948845..f457447 100644
+--- a/cmake/platforms/emscripten.cmake
++++ b/cmake/platforms/emscripten.cmake
+@@ -19,11 +19,11 @@ set(USE_HTTP OFF CACHE INTERNAL "")
+ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
+ 
+ list(APPEND CLIENT_LINK_OPTIONS
+-    -sTOTAL_MEMORY=256MB
++    -sTOTAL_MEMORY=512MB
+     -sSTACK_SIZE=5MB
+     -sMIN_WEBGL_VERSION=1
+     -sMAX_WEBGL_VERSION=2
+-    -sEXPORTED_RUNTIME_METHODS=FS,addRunDependency,removeRunDependency
++    -sEXPORTED_RUNTIME_METHODS=FS,addRunDependency,removeRunDependency,ccall
+     -sEXIT_RUNTIME=1
+     -sEXPORT_ES6
+     -sEXPORT_NAME=${CLIENT_NAME}
+diff --git a/code/sys/sys_main.c b/code/sys/sys_main.c
+index e3b63cb..5272fc3 100644
+--- a/code/sys/sys_main.c
++++ b/code/sys/sys_main.c
+@@ -898,3 +898,12 @@ int main( int argc, char **argv )
+ 
+ 	return 0;
+ }
++
++#ifdef __EMSCRIPTEN__
++// Lets the web page queue console commands, e.g. Module.ccall('Sys_WebCommand', null, ['string'], ['map_restart']).
++EMSCRIPTEN_KEEPALIVE void Sys_WebCommand( const char *text )
++{
++	Cbuf_AddText( text );
++	Cbuf_AddText( "\n" );
++}
++#endif

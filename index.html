@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retro Quest Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d0a08; --panel:#1a1410; --line:#3a2c1f; --text:#eadfcc; --muted:#a8977e; --accent:#c8492c; --gold:#d6a84a; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:radial-gradient(ellipse at top, #2a1810 0%, var(--bg) 60%); background-color:var(--bg); color:var(--text); font-family:Inter, system-ui, sans-serif; min-height:100vh; }
+  header { text-align:center; padding:56px 16px 24px; }
+  h1 { font-family:Cinzel, serif; font-weight:800; font-size:clamp(2rem, 6vw, 3.4rem); margin:0; color:var(--gold); letter-spacing:.04em; text-shadow:0 2px 18px rgba(200,73,44,.45); }
+  header p { color:var(--muted); max-width:560px; margin:12px auto 0; line-height:1.5; }
+  main { max-width:1000px; margin:0 auto; padding:16px 16px 64px; display:grid; gap:20px; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
+  .art { aspect-ratio:16/10; background:#000 center/cover no-repeat; position:relative; }
+  .art.locked { filter:grayscale(.8) brightness(.5); display:grid; place-items:center; font-family:Cinzel, serif; font-size:2.4rem; color:var(--gold); background:linear-gradient(135deg,#2b1a12,#0a0705); }
+  .tag { position:absolute; top:10px; left:10px; background:rgba(0,0,0,.7); color:var(--gold); font-size:.72rem; padding:4px 8px; border-radius:20px; letter-spacing:.06em; text-transform:uppercase; }
+  .body { padding:18px; display:flex; flex-direction:column; gap:10px; flex:1; }
+  h2 { font-family:Cinzel, serif; margin:0; font-size:1.35rem; }
+  .meta { color:var(--muted); font-size:.85rem; }
+  .desc { color:var(--text); font-size:.95rem; line-height:1.5; flex:1; }
+  .btn { display:block; text-align:center; padding:12px; border-radius:8px; background:var(--accent); color:#fff; font-weight:600; text-decoration:none; }
+  .btn:hover { filter:brightness(1.15); }
+  .btn.off { background:#2a2119; color:var(--muted); pointer-events:none; }
+  footer { text-align:center; color:var(--muted); font-size:.8rem; padding:0 16px 32px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Retro Quest Arcade</h1>
+  <p>Jump into a quick session of a classic. Games run entirely in your browser; any game files you load stay on your own computer.</p>
+</header>
+<main>
+  <article class="card">
+    <div class="art" style="background-image:url(d1.png)"><span class="tag">Playable</span></div>
+    <div class="body">
+      <h2>Diablo</h2>
+      <div class="meta">Blizzard North · 1996 · Action RPG</div>
+      <div class="desc">Descend into the cathedral beneath Tristram. Play the free demo instantly, or drop in <b>DIABDAT.MPQ</b> from your own copy for the full game.</div>
+      <a class="btn" href="diablo/">Play now</a>
+    </div>
+  </article>
+  <article class="card">
+    <div class="art locked"><span class="tag">In the works</span>II</div>
+    <div class="body">
+      <h2>Diablo II</h2>
+      <div class="meta">Blizzard North · 2000 · Action RPG</div>
+      <div class="desc">Coming soon. Diablo II needs a heavier approach to run in a browser, and we're working on it.</div>
+      <a class="btn off">Coming soon</a>
+    </div>
+  </article>
+  <article class="card">
+    <div class="art" style="background-image:url(tower-defense/screenshot.png)"><span class="tag">Playable</span></div>
+    <div class="body">
+      <h2>Kingdom's Last Stand</h2>
+      <div class="meta">Original · Tribute to Warcraft III custom maps · Tower Defense</div>
+      <div class="desc">Hold the road against 30 waves of orcs, wolves, knights, bats and three bosses. Build and upgrade Arrow, Cannon, Frost and Arcane towers. Works on phones too.</div>
+      <a class="btn" href="tower-defense/">Play now</a>
+    </div>
+  </article>
+  <article class="card">
+    <div class="art" style="background-image:url(q3.jpg)"><span class="tag">Playable</span></div>
+    <div class="body">
+      <h2>Quake III Arena</h2>
+      <div class="meta">id Software · 1999 · Arena Shooter</div>
+      <div class="desc">The free demo, built right in. Fight bots across four arenas with the rocket launcher, railgun and more. Needs a keyboard and mouse; about 50 MB loads the first time.</div>
+      <a class="btn" href="quake3/">Play now</a>
+    </div>
+  </article>
+</main>
+<footer>Fan project. Only free demo data is included, so there is nothing you need to supply. Games belong to their original makers.</footer>
+</body>
+</html>

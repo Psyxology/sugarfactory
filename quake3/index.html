@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quake III Arena Demo · Retro Quest Arcade</title>
+<style>
+  :root { --bg:#0d0a08; --panel:#1a1410; --line:#3a2c1f; --text:#eadfcc; --muted:#a8977e; --accent:#c8492c; --gold:#d6a84a; }
+  html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; color:var(--text); font-family:Inter, system-ui, sans-serif; }
+  canvas { position:absolute; inset:0; z-index:1; width:100%; height:100%; object-fit:contain; display:block; }
+  #start { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:16px; text-align:center;
+           background:radial-gradient(ellipse at center, #2a1810 0%, #000 70%); z-index:2; }
+  #start h1 { font-family:Georgia, serif; color:var(--gold); font-size:clamp(1.8rem, 5vw, 3rem); margin:0; letter-spacing:.05em; text-shadow:0 2px 18px rgba(200,73,44,.5); }
+  #start p { color:var(--muted); max-width:520px; line-height:1.5; margin:0; }
+  #play { font-size:1.15rem; font-weight:600; padding:14px 40px; border:0; border-radius:8px; background:var(--accent); color:#fff; cursor:pointer; }
+  #play:hover { filter:brightness(1.15); }
+  #play:disabled { background:#2a2119; color:var(--muted); cursor:default; }
+  .bar { width:min(420px, 100%); height:10px; background:#2a2119; border-radius:6px; overflow:hidden; visibility:hidden; }
+  .bar > div { height:100%; width:0; background:var(--gold); transition:width .15s; }
+  #status { min-height:1.4em; font-size:.9rem; color:var(--muted); }
+  .keys { font-size:.85rem; color:var(--muted); line-height:1.7; }
+  .keys b { color:var(--text); }
+  a { color:var(--gold); }
+  #back { position:fixed; top:10px; left:12px; z-index:2147483647; font-size:.85rem; text-decoration:none; background:rgba(0,0,0,.6); padding:5px 10px; border-radius:16px; }
+  #back:hover { text-decoration:underline; }
+  .small { font-size:.75rem; }
+</style>
+</head>
+<body>
+<a id="back" href="../">← Arcade</a>
+<canvas id="canvas" tabindex="-1"></canvas>
+<div id="start">
+  <h1>QUAKE III ARENA</h1>
+  <p>The free 1999 demo: fight bots in the arena. The game downloads about 50 MB the first time, then starts right in your browser.</p>
+  <button id="play">Play demo</button>
+  <div class="bar"><div id="fill"></div></div>
+  <div id="status"></div>
+  <div class="keys">
+    Move <b>W A S D</b> · Aim <b>mouse</b> · Shoot <b>left click</b> · Jump <b>space</b> · Change weapon <b>mouse wheel</b><br>
+    In the menu pick <b>Single Player</b> to fight bots. Press <b>Esc</b> for the menu and to free your mouse.
+  </div>
+  <div class="small">Quake III Arena demo © id Software, shared free under its <a href="DEMO-LICENSE.txt" target="_blank">demo license</a>. Engine: <a href="https://ioquake3.org/" target="_blank">ioquake3</a> (GPL).</div>
+</div>
+
+<script type="module">
+const GAME = 'demoq3';
+const playBtn = document.getElementById('play');
+const fill = document.getElementById('fill');
+const statusEl = document.getElementById('status');
+const startEl = document.getElementById('start');
+const canvas = document.getElementById('canvas');
+
+// Download a file and report how many bytes have arrived so far.
+async function download(url, onBytes) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Could not download ${url} (${res.status})`);
+  if (!res.body) { const b = new Uint8Array(await res.arrayBuffer()); onBytes(b.length); return b; }
+  const reader = res.body.getReader();
+  const chunks = []; let got = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value); got += value.length; onBytes(value.length);
+  }
+  const out = new Uint8Array(got); let off = 0;
+  for (const c of chunks) { out.set(c, off); off += c.length; }
+  return out;
+}
+
+async function start() {
+  playBtn.disabled = true;
+  playBtn.textContent = 'Loading…';
+  document.querySelector('.bar').style.visibility = 'visible';
+  try {
+    const config = await (await fetch('ioquake3-config.json')).json();
+    const files = config[GAME].files;
+    // Ask the server for sizes so the progress bar is accurate.
+    const sizes = await Promise.all(files.map(f => fetch(f.src, { method: 'HEAD' })
+      .then(r => Number(r.headers.get('content-length')) || 0).catch(() => 0)));
+    const total = sizes.reduce((a, b) => a + b, 0) || 47000000;
+    let done = 0;
+    const tick = n => {
+      done += n;
+      const pct = Math.min(100, Math.round(done / total * 100));
+      fill.style.width = pct + '%';
+      statusEl.textContent = `Downloading game data… ${(done / 1048576).toFixed(0)} of ${(total / 1048576).toFixed(0)} MB`;
+    };
+    const blobs = [];
+    for (const f of files) blobs.push(await download(f.src, tick));
+
+    statusEl.textContent = 'Starting the engine…';
+    const ioquake3 = (await import('./ioquake3.js')).default;
+    const args = `
+      +set sv_pure 0
+      +set net_enabled 0
+      +set r_mode -2
+      +set r_fullscreen 0
+      +set com_basegame ${GAME}
+    `.trim().split(/\s+/);
+    await ioquake3({
+      canvas,
+      arguments: args,
+      locateFile: file => './' + file,
+      preRun: [module => {
+        files.forEach((f, i) => {
+          const name = f.src.match(/[^/]+$/)[0];
+          module.FS.mkdirTree(f.dst);
+          module.FS.writeFile(`${f.dst}/${name}`, blobs[i]);
+        });
+      }],
+    });
+    startEl.style.display = 'none';
+    canvas.focus();
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = 'Something went wrong loading the game: ' + err.message;
+    playBtn.disabled = false;
+    playBtn.textContent = 'Try again';
+  }
+}
+playBtn.addEventListener('click', start);
+// The running game swallows normal clicks, so leave on press instead.
+document.getElementById('back').addEventListener('pointerdown', e => {
+  e.preventDefault(); e.stopPropagation();
+  if (document.pointerLockElement) document.exitPointerLock();
+  location.href = '../';
+}, true);
+</script>
+</body>
+</html>

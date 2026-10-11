@@ -1,0 +1,10 @@
+{
+    "demoq3": {
+        "files": [
+            {"src": "demoq3/pak0.pk3", "dst": "/demoq3"},
+            {"src": "demoq3/vm/cgame.qvm", "dst": "/demoq3/vm"},
+            {"src": "demoq3/vm/qagame.qvm", "dst": "/demoq3/vm"},
+            {"src": "demoq3/vm/ui.qvm", "dst": "/demoq3/vm"}
+        ]
+    }
+}

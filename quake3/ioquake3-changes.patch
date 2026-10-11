@@ -1,0 +1,17 @@
+diff --git a/code/q3_ui/ui_gameinfo.c b/code/q3_ui/ui_gameinfo.c
+index 6d857de..6ee39d6 100644
+--- a/code/q3_ui/ui_gameinfo.c
++++ b/code/q3_ui/ui_gameinfo.c
+@@ -811,5 +811,11 @@ void UI_InitGameinfo( void ) {
+ 	UI_LoadArenas();
+ 	UI_LoadBots();
+ 
+-	uis.demoversion = qfalse;
++	// Retro Quest Arcade: running the free Quake III demo data, so behave like the
++	// original demo (no CD key prompt, demo menus).
++	{
++		char basegame[MAX_QPATH];
++		trap_Cvar_VariableStringBuffer( "com_basegame", basegame, sizeof(basegame) );
++		uis.demoversion = !Q_stricmp( basegame, "demoq3" );
++	}
+ }

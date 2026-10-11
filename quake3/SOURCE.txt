@@ -1,0 +1,6 @@
+Engine: ioquake3 (https://github.com/ioquake/ioq3), licensed under the GNU GPL v2.
+Built from commit 83a776283bdb958f82db25554b5ed0966aaf6e49 with Emscripten.
+Our only change is in ioquake3-changes.patch (the menu treats the free demo data as the demo, so no CD key is asked for).
+
+Game data: demoq3/pak0.pk3 is the free Quake III Arena demo by id Software (1999),
+redistributed free of charge for non-commercial use under DEMO-LICENSE.txt.

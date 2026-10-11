@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0a08">
+<title>Kingdom's Last Stand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d0a08; --panel:#1a1410; --panel2:#231a13; --line:#3a2c1f; --text:#eadfcc; --muted:#a8977e; --accent:#c8492c; --gold:#d6a84a; --good:#7cc56a; --bad:#e0573f; color-scheme:dark; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font-family:Inter, system-ui, sans-serif; overflow:hidden; }
+  body { background:radial-gradient(ellipse at top, #2a1810 0%, var(--bg) 60%); background-color:var(--bg); }
+  button { font:inherit; color:inherit; }
+  #app { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:6px 8px calc(6px + env(safe-area-inset-bottom)); gap:6px; }
+  #hud { width:var(--w); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .stat { display:flex; align-items:center; gap:5px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:5px 10px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .stat small { color:var(--muted); font-weight:600; }
+  .ico { font-size:1rem; line-height:1; }
+  #hud .spacer { flex:1; }
+  .hbtn { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px 10px; cursor:pointer; min-width:38px; font-weight:600; }
+  .hbtn:hover { border-color:var(--gold); }
+  #waveBtn { background:var(--accent); border-color:#e06a4c; color:#fff; padding:6px 14px; }
+  #waveBtn:disabled { background:var(--panel2); border-color:var(--line); color:var(--muted); cursor:default; }
+  #back { color:var(--muted); text-decoration:none; font-size:.85rem; padding:6px 4px; }
+  #back:hover { color:var(--gold); }
+  #stage { position:relative; width:var(--w); aspect-ratio:5/3; border-radius:10px; overflow:hidden; border:1px solid var(--line); box-shadow:0 10px 40px rgba(0,0,0,.5); touch-action:manipulation; }
+  canvas { display:block; width:100%; height:100%; cursor:pointer; }
+  #banner { position:absolute; left:50%; top:16%; transform:translateX(-50%); font-family:Cinzel, serif; font-weight:800; font-size:clamp(1rem, 4vw, 2.2rem); color:var(--gold); text-shadow:0 2px 12px #000, 0 0 4px #000; pointer-events:none; opacity:0; transition:opacity .4s; white-space:nowrap; }
+  #banner.show { opacity:1; }
+  #hint { position:absolute; left:50%; bottom:8px; transform:translateX(-50%); background:rgba(0,0,0,.72); color:var(--text); padding:5px 12px; border-radius:20px; font-size:.82rem; pointer-events:none; opacity:0; transition:opacity .25s; white-space:nowrap; }
+  #hint.show { opacity:1; }
+  #overlay { position:absolute; inset:0; background:rgba(8,6,4,.78); display:flex; align-items:center; justify-content:center; padding:12px; }
+  #overlay.hide { display:none; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:clamp(14px, 3vw, 26px); max-width:520px; width:100%; text-align:center; max-height:100%; overflow:auto; }
+  .card h1 { font-family:Cinzel, serif; font-weight:800; color:var(--gold); margin:0 0 6px; font-size:clamp(1.3rem, 4.5vw, 2.2rem); letter-spacing:.03em; }
+  .card p { color:var(--muted); margin:6px 0; line-height:1.45; font-size:clamp(.8rem, 2.2vw, .95rem); }
+  .card ul { text-align:left; color:var(--text); margin:10px auto; padding-left:20px; max-width:420px; font-size:clamp(.78rem, 2.2vw, .92rem); line-height:1.45; }
+  .big { display:inline-block; margin-top:10px; padding:11px 30px; border-radius:8px; background:var(--accent); color:#fff; font-weight:700; border:0; cursor:pointer; font-size:1rem; }
+  .big:hover { filter:brightness(1.15); }
+  #dock { width:var(--w); display:flex; gap:6px; min-height:64px; }
+  .tbtn { flex:1; display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:5px 8px; cursor:pointer; text-align:left; min-width:0; }
+  .tbtn:hover { border-color:var(--gold); }
+  .tbtn.sel { border-color:var(--gold); background:#2d2216; box-shadow:inset 0 0 0 1px var(--gold); }
+  .tbtn.poor { opacity:.5; }
+  .tbtn canvas { width:44px; height:44px; flex:none; }
+  .tbtn .nm { font-weight:700; font-size:.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tbtn .cost { color:var(--gold); font-weight:700; font-size:.82rem; }
+  .tbtn .bl { color:var(--muted); font-size:.72rem; line-height:1.25; }
+  .key { color:var(--muted); font-size:.68rem; border:1px solid var(--line); border-radius:4px; padding:0 4px; margin-left:4px; }
+  #info { flex:1; display:flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:6px 10px; }
+  #info canvas { width:48px; height:48px; flex:none; }
+  #info .txt { flex:1; min-width:0; }
+  #info .nm { font-weight:700; }
+  #info .st { color:var(--muted); font-size:.8rem; }
+  #info .st b { color:var(--text); }
+  #info .up { color:var(--good); }
+  .abtn { border-radius:8px; padding:8px 12px; border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-weight:700; white-space:nowrap; }
+  .abtn.go { background:#2f5a24; border-color:#4c8a3a; }
+  .abtn.go:disabled { background:var(--panel2); border-color:var(--line); color:var(--muted); cursor:default; }
+  .abtn.sell { background:#5a2a1f; border-color:#8a4232; }
+  .hide { display:none !important; }
+  /* Phones held sideways: board on the left, controls in a column on the right */
+  body.side #app { display:grid; grid-template-columns:var(--w) 170px; grid-template-rows:auto 1fr; grid-template-areas:"stage hud" "stage dock"; justify-content:center; align-items:start; padding:6px 8px; }
+  body.side #stage { grid-area:stage; }
+  body.side #hud { grid-area:hud; width:170px; gap:4px; }
+  body.side #hud .spacer { display:none; }
+  body.side #waveBtn { width:100%; }
+  body.side #dock { grid-area:dock; width:170px; flex-direction:column; min-height:0; }
+  body.side .tbtn { flex:none; flex-direction:row; text-align:left; padding:3px 6px; gap:6px; }
+  body.side .tbtn canvas { width:30px; height:30px; }
+  body.side .tbtn .bl, body.side .key { display:none; }
+  body.side .tbtn .nm { font-size:.78rem; }
+  body.side #info { flex-direction:column; align-items:stretch; text-align:center; gap:5px; padding:6px; }
+  body.side #info canvas { align-self:center; }
+  body.side #info .st { font-size:.72rem; }
+  body.side .abtn { padding:6px; font-size:.8rem; }
+  body.side .stat { padding:3px 6px; font-size:.8rem; }
+  body.side .hbtn { padding:4px 6px; min-width:30px; font-size:.85rem; }
+  @media (max-width:640px) {
+    .tbtn { flex-direction:column; gap:2px; text-align:center; padding:4px; }
+    .tbtn canvas { width:34px; height:34px; }
+    .tbtn .bl, .key { display:none; }
+    .tbtn .nm { font-size:.74rem; }
+    .stat { padding:4px 7px; font-size:.85rem; }
+    .hbtn { padding:5px 8px; min-width:32px; }
+    #info { flex-wrap:wrap; gap:6px; }
+    #info .txt { flex-basis:calc(100% - 50px); }
+    #info .abtn.go, #info .abtn.sell { flex:1; }
+    #info canvas { width:36px; height:36px; }
+    .abtn { padding:7px 9px; font-size:.85rem; }
+    #back span { display:none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <a id="back" href="../" title="Back to the arcade">&larr; <span>Arcade</span></a>
+    <div class="stat" title="Gold"><span class="ico">🪙</span><span id="gold">0</span></div>
+    <div class="stat" title="Lives"><span class="ico">❤️</span><span id="lives">20</span></div>
+    <div class="stat" title="Wave"><small>Wave</small><span id="wave">0/30</span></div>
+    <div class="spacer"></div>
+    <button class="hbtn" id="speedBtn" title="Game speed (F)">1×</button>
+    <button class="hbtn" id="pauseBtn" title="Pause (P)">❚❚</button>
+    <button class="hbtn" id="soundBtn" title="Sound (M)">🔊</button>
+    <button class="hbtn" id="waveBtn" title="Send the next wave (Space)">Start wave 1</button>
+  </div>
+  <div id="stage">
+    <canvas id="cv"></canvas>
+    <div id="banner"></div>
+    <div id="hint"></div>
+    <div id="overlay">
+      <div class="card" id="card"></div>
+    </div>
+  </div>
+  <div id="dock">
+    <div id="picker" style="display:contents"></div>
+    <div id="info" class="hide"></div>
+  </div>
+</div>
+<script src="core.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>
